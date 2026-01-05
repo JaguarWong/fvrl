@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book Club Catalog 2025</title>
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --accent: #3498db;
+            --bg: #f4f7f6;
+            --card: #ffffff;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg);
+            margin: 0;
+            padding: 20px;
+            color: var(--primary);
+        }
+
+        header {
+            max-width: 1200px;
+            margin: 0 auto 30px;
+            text-align: center;
+        }
+
+        #search-bar {
+            width: 100%;
+            max-width: 500px;
+            padding: 12px 20px;
+            font-size: 16px;
+            border: 2px solid #ddd;
+            border-radius: 25px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        #search-bar:focus { border-color: var(--accent); }
+
+        /* Responsive Grid */
+        .book-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 25px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .book-card {
+            background: var(--card);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.2s;
+        }
+
+        .book-card:hover { transform: translateY(-5px); }
+
+        .thumbnail-container {
+            height: 250px;
+            background: #eee;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .thumbnail-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            padding: 10px;
+        }
+
+        .book-info {
+            padding: 20px;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .book-title {
+            font-size: 1.1rem;
+            font-weight: bold;
+            margin: 0 0 8px;
+            line-height: 1.3;
+        }
+
+        .book-author {
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 12px;
+        }
+
+        .meta-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-bottom: 15px;
+        }
+
+        .tag {
+            background: #eef2f3;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            color: #555;
+        }
+
+        .rating { color: #f1c40f; font-weight: bold; margin-bottom: 10px; }
+
+        .description {
+            font-size: 0.85rem;
+            color: #444;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            margin-bottom: 15px;
+        }
+
+        .btn-preview {
+            margin-top: auto;
+            text-align: center;
+            background: var(--accent);
+            color: white;
+            text-decoration: none;
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 600px) {
+            .book-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>2025 Book Catalog</h1>
+    <input type="text" id="search-bar" placeholder="Search by title, author, or genre...">
+    <p id="count-label">Loading books...</p>
+</header>
+
+<div class="book-grid" id="book-grid"></div>
+
+<script>
+    let allBooks = [];
+
+    // Fetch the JSON file
+    fetch('booklist-updated.json')
+        .then(response => response.json())
+        .then(data => {
+            allBooks = data;
+            displayBooks(allBooks);
+        })
+        .catch(err => {
+            document.getElementById('count-label').innerText = "Error loading JSON. Make sure you are running a local server.";
+            console.error(err);
+        });
+
+    function displayBooks(books) {
+        const grid = document.getElementById('book-grid');
+        const countLabel = document.getElementById('count-label');
+        grid.innerHTML = '';
+        countLabel.innerText = `Showing ${books.length} books`;
+
+        books.forEach(book => {
+            const card = document.createElement('div');
+            card.className = 'book-card';
+            
+            // Clean up description
+            const cleanDesc = book.Description !== "No description available" ? book.Description : "";
+            
+            card.innerHTML = `
+                <div class="thumbnail-container">
+                    <img src="${book.Thumbnail}" alt="Cover" loading="lazy" onerror="this.src='https://via.placeholder.com/150x200?text=No+Cover'">
+                </div>
+                <div class="book-info">
+                    <div class="book-title">${book.Title}</div>
+                    <div class="book-author">by ${book.Author}</div>
+                    <div class="rating">${book.AverageRating !== "N/A" ? '★ ' + book.AverageRating : ''}</div>
+                    <div class="meta-tags">
+                        <span class="tag">${book.PageCount} pages</span>
+                        ${book.Categories !== "N/A" ? `<span class="tag">${book.Categories}</span>` : ''}
+                    </div>
+                    <div class="description">${cleanDesc}</div>
+                    <a href="${book.PreviewLink}" target="_blank" class="btn-preview">Preview Book</a>
+                </div>
+            `;
+            grid.appendChild(card);
+        });
+    }
+
+    // Search Logic
+    document.getElementById('search-bar').addEventListener('input', (e) => {
+        const term = e.target.value.toLowerCase();
+        const filtered = allBooks.filter(book => 
+            book.Title.toLowerCase().includes(term) || 
+            book.Author.toLowerCase().includes(term) ||
+            (book.Categories && book.Categories.toLowerCase().includes(term))
+        );
+        displayBooks(filtered);
+    });
+</script>
+
+</body>
+</html>
