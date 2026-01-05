@@ -2,113 +2,124 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Book Club 2025</title>
     <style>
         :root {
             --bg: #f8f9fa;
             --text: #2d3436;
             --accent: #0984e3;
+            --cancel: #ff7675; /* Soft Red/Coral */
             --card-bg: #ffffff;
         }
 
-        body {
+        html, body {
+            overflow-x: hidden;
+            width: 100%;
+            margin: 0;
+            padding: 0;
             font-family: -apple-system, system-ui, sans-serif;
             background: var(--bg);
             color: var(--text);
-            margin: 0;
-            padding: 20px;
         }
 
-        header { text-align: center; margin-bottom: 30px; }
-        
+        header { 
+            text-align: center; 
+            padding: 15px 10px; 
+        }
+
+        /* Responsive Search Bar */
         #search-bar {
-            width: 100%;
-            max-width: 400px;
-            padding: 12px 20px;
-            border-radius: 25px;
+            width: 85%; /* Slightly narrower for mobile margins */
+            max-width: 320px; /* Constrained for small screens */
+            padding: 10px 15px;
+            border-radius: 20px;
             border: 1px solid #dfe6e9;
-            font-size: 16px;
+            font-size: 14px;
             outline: none;
             box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            transition: all 0.2s ease;
         }
 
-        /* The Grid: Simple Thumbnails + Titles */
+        @media (min-width: 600px) {
+            #search-bar {
+                width: 70%;
+                max-width: 450px;
+                font-size: 16px;
+                padding: 12px 20px;
+            }
+        }
+
         .book-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-            gap: 15px;
+            grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+            gap: 12px;
+            padding: 15px;
             max-width: 1000px;
             margin: 0 auto;
         }
 
         .book-item {
             background: var(--card-bg);
-            border-radius: 8px;
-            padding: 10px;
+            border-radius: 10px;
+            padding: 8px;
             text-align: center;
             cursor: pointer;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-            transition: transform 0.1s;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.05);
         }
-
-        .book-item:active { transform: scale(0.95); }
 
         .book-item img {
             width: 100%;
             aspect-ratio: 2/3;
             object-fit: cover;
-            border-radius: 4px;
-            margin-bottom: 8px;
+            border-radius: 6px;
             background: #eee;
         }
 
-        .book-item .title {
-            font-size: 0.85rem;
-            font-weight: 600;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-            height: 2.4em;
-        }
-
-        /* Details Overlay (Modal) */
+        /* Overlay with Fixed Containment */
         #details-overlay {
             position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%;
             background: white;
             z-index: 1000;
-            display: none; /* Hidden by default */
+            display: none; 
             flex-direction: column;
+            overflow-x: hidden;
             overflow-y: auto;
-            animation: slideUp 0.3s ease-out;
+            box-sizing: border-box;
+            touch-action: pan-y;
+            will-change: transform;
         }
 
-        @keyframes slideUp {
-            from { transform: translateY(100%); }
-            to { transform: translateY(0); }
+        #details-overlay.snapping {
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.1), opacity 0.2s;
         }
 
-        .close-btn {
-            position: sticky;
-            top: 20px;
-            left: 20px;
-            width: 40px;
-            height: 40px;
-            background: rgba(0,0,0,0.1);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 24px;
+        /* Styled Back Button */
+        .back-btn {
+            position: fixed;
+            top: 15px;
+            left: 15px;
+            padding: 8px 18px;
+            background: var(--cancel);
+            color: white;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 13px;
+            z-index: 1002;
+            box-shadow: 0 3px 10px rgba(255, 118, 117, 0.3);
+            border: none;
             cursor: pointer;
-            z-index: 1001;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         .details-content {
-            padding: 20px;
-            max-width: 600px;
+            padding: 70px 20px 40px;
+            max-width: 550px;
             margin: 0 auto;
             text-align: center;
         }
@@ -116,126 +127,134 @@
         .details-content img {
             width: 180px;
             border-radius: 8px;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
-            margin-bottom: 20px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+            margin-bottom: 15px;
         }
 
-        .details-content h2 { margin: 10px 0; }
-        .details-content .author { color: #636e72; margin-bottom: 20px; }
-        .details-content .full-desc {
+        .full-desc {
             text-align: left;
             line-height: 1.6;
-            color: #444;
             background: #f1f2f6;
-            padding: 20px;
+            padding: 18px;
             border-radius: 12px;
             margin-top: 20px;
-        }
-
-        .details-content .meta {
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-            margin-top: 15px;
-            font-weight: bold;
-            font-size: 0.9rem;
-        }
-
-        @media (min-width: 600px) {
-            .book-grid { grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); }
+            font-size: 15px;
         }
     </style>
 </head>
 <body>
 
 <header>
-    <h1>The 2025 Library</h1>
-    <input type="text" id="search-bar" placeholder="Search 300+ books...">
+    <h1 style="font-size: 1.5rem; margin-bottom: 10px;">2025 Book List</h1>
+    <input type="text" id="search-bar" placeholder="Search by title or author...">
 </header>
 
 <div class="book-grid" id="main-grid"></div>
 
 <div id="details-overlay">
-    <div class="close-btn" onclick="closeDetails()">×</div>
-    <div class="details-content" id="details-body">
-        </div>
+    <button class="back-btn" onclick="closeDetails()">Back</button>
+    <div class="details-content" id="details-body"></div>
 </div>
 
 <script>
     let books = [];
     const grid = document.getElementById('main-grid');
     const overlay = document.getElementById('details-overlay');
-    const detailsBody = document.getElementById('details-body');
+    const body = document.getElementById('details-body');
 
-    // Load JSON
     fetch('booklist-updated.json')
         .then(res => res.json())
         .then(data => {
             books = data;
-            renderGrid(books);
+            render(books);
         });
 
-    function renderGrid(list) {
-        grid.innerHTML = list.map((book, idx) => `
-            <div class="book-item" onclick="showDetails(${idx})">
-                <img src="${book.Thumbnail}" loading="lazy" onerror="this.src='https://via.placeholder.com/150x225?text=No+Cover'">
-                <div class="title">${book.Title}</div>
+    function render(list) {
+        grid.innerHTML = list.map((b, i) => `
+            <div class="book-item" onclick="openDetails(${i})">
+                <img src="${b.Thumbnail}" loading="lazy" onerror="this.src='https://via.placeholder.com/150x225?text=No+Cover'">
+                <div style="font-size:12px; font-weight:600; margin-top:5px; line-height:1.2;">${b.Title}</div>
             </div>
         `).join('');
     }
 
-    function showDetails(index) {
-        const book = books[index];
-        detailsBody.innerHTML = `
-            <img src="${book.Thumbnail}" onerror="this.src='https://via.placeholder.com/150x225?text=No+Cover'">
-            <h2>${book.Title}</h2>
-            <div class="author">by ${book.Author}</div>
-            <div class="meta">
-                <span>📖 ${book.PageCount} Pages</span>
-                <span>⭐ ${book.AverageRating}</span>
+    function openDetails(idx) {
+        const b = books[idx];
+        body.innerHTML = `
+            <img src="${b.Thumbnail}" onerror="this.src='https://via.placeholder.com/150x225?text=No+Cover'">
+            <h2 style="font-size: 1.3rem;">${b.Title}</h2>
+            <p style="color: #636e72;">by ${b.Author}</p>
+            <div style="display: flex; justify-content: center; gap: 15px; margin: 10px 0; font-size: 14px; font-weight: bold;">
+                <span>📖 ${b.PageCount} Pages</span>
+                <span>⭐ ${b.AverageRating}</span>
             </div>
-            <div class="full-desc">${book.Description}</div>
-            <br><br>
-            <a href="${book.PreviewLink}" target="_blank" style="color: var(--accent)">Read Google Preview</a>
+            <div class="full-desc">${b.Description}</div>
+            <br>
+            <a href="${b.PreviewLink}" target="_blank" style="color: var(--accent); font-weight: 600; text-decoration: none;">View on Google Books →</a>
         `;
+        overlay.style.transform = 'translateX(0)';
+        overlay.style.opacity = '1';
         overlay.style.display = 'flex';
-        document.body.style.overflow = 'hidden'; // Prevent background scroll
+        document.body.style.overflow = 'hidden';
     }
 
     function closeDetails() {
         overlay.style.display = 'none';
         document.body.style.overflow = 'auto';
+        overlay.style.transform = 'translateX(0)';
     }
 
-    // SWIPE LOGIC
-    let touchStartX = 0;
-    let touchStartY = 0;
-    const swipeThreshold = 100; // Minimum pixels for a "solid swipe"
+    // INTERACTIVE SWIPE LOGIC
+    let startX = 0;
+    let startY = 0;
+    let currentX = 0;
+    let isSwiping = false;
+    const threshold = 110;
 
     overlay.addEventListener('touchstart', e => {
-        touchStartX = e.changedTouches[0].screenX;
-        touchStartY = e.changedTouches[0].screenY;
+        startX = e.touches[0].clientX;
+        startY = e.touches[0].clientY;
+        overlay.classList.remove('snapping');
+        isSwiping = false;
     }, {passive: true});
 
-    overlay.addEventListener('touchend', e => {
-        const touchEndX = e.changedTouches[0].screenX;
-        const touchEndY = e.changedTouches[0].screenY;
-        
-        const deltaX = touchEndX - touchStartX;
-        const deltaY = touchEndY - touchStartY;
+    overlay.addEventListener('touchmove', e => {
+        const moveX = e.touches[0].clientX;
+        const moveY = e.touches[0].clientY;
+        const deltaX = moveX - startX;
+        const deltaY = moveY - startY;
 
-        // Check if swipe is horizontal and exceeds threshold
-        // We also check if Math.abs(deltaX) > Math.abs(deltaY) to ensure they didn't just scroll down
-        if (Math.abs(deltaX) > swipeThreshold && Math.abs(deltaX) > Math.abs(deltaY)) {
-            closeDetails();
+        if (!isSwiping && Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 10) {
+            isSwiping = true;
+        }
+
+        if (isSwiping) {
+            currentX = deltaX * 0.75; 
+            overlay.style.transform = `translateX(${currentX}px)`;
+            overlay.style.opacity = 1 - (Math.abs(currentX) / 600);
         }
     }, {passive: true});
 
-    // Search Filtering
+    overlay.addEventListener('touchend', e => {
+        overlay.classList.add('snapping');
+        if (Math.abs(currentX) > threshold) {
+            const direction = currentX > 0 ? '100%' : '-100%';
+            overlay.style.transform = `translateX(${direction})`;
+            overlay.style.opacity = '0';
+            setTimeout(closeDetails, 250);
+        } else {
+            overlay.style.transform = 'translateX(0)';
+            overlay.style.opacity = '1';
+        }
+        currentX = 0;
+    });
+
     document.getElementById('search-bar').addEventListener('input', e => {
         const val = e.target.value.toLowerCase();
-        const filtered = books.filter(b => b.Title.toLowerCase().includes(val) || b.Author.toLowerCase().includes(val));
-        renderGrid(filtered);
+        render(books.filter(b => 
+            b.Title.toLowerCase().includes(val) || 
+            b.Author.toLowerCase().includes(val)
+        ));
     });
 </script>
 
